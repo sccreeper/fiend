@@ -3,7 +3,7 @@ import changeToWav from './routes/changeToWav';
 
 const router = Router();
 
-router.get("/api/changePcmToWav", () => changeToWav)
+router.post("/api/changePcmToWav", (request) => changeToWav(request))
 
 router.get("/", () => Response.redirect("https://www.oscarcp.net", 303))
 
