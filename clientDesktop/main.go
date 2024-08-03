@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,11 @@ import (
 const DefaultSampleRate int64 = 8000
 const DefaultFramesPerBuffer int64 = 512
 const DefaultChannels int64 = 1
+
+type FiendResponse struct {
+	UserMessage string `json:"userMessage"`
+	LlmResponse string `json:"llmResponse"`
+}
 
 func main() {
 
@@ -112,35 +118,29 @@ func main() {
 
 	fmt.Printf("Buffer size: %d\n", buffer.Len())
 
-	bytesSlice := buffer.Bytes()
-	bytesReader := bytes.NewReader(bytesSlice)
-
-	fRaw, err := os.Create("raw.bin")
-	if err != nil {
-		panic(err)
-	}
-	defer fRaw.Close()
-	io.Copy(fRaw, bytesReader)
-	bytesReader.Seek(0, io.SeekStart)
-
 	// Send data to server
 
-	res, err := http.Post("http://localhost:8787/api/changePcmToWav", "application/octet-stream", buffer)
+	res, err := http.Post("http://localhost:8787/api/askQuestion", "application/octet-stream", buffer)
 	if err != nil {
 		panic(err)
 	}
 	defer res.Body.Close()
 
-	f, err := os.Create("result.wav")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
+	var responseJson FiendResponse
 
-	bytesWritten, err := io.Copy(f, res.Body)
+	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Written %d bytes", bytesWritten)
+
+	err = json.Unmarshal(bodyBytes, &responseJson)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("You\n---\n")
+	fmt.Println(responseJson.UserMessage)
+	fmt.Printf("Fiend\n---\n")
+	fmt.Println(responseJson.LlmResponse)
 
 }

@@ -1,9 +1,11 @@
 import { Router } from 'itty-router';
-import changeToWav from './routes/changeToWav';
+import routeChangeToWav from './routes/changeToWav';
+import routeAskQuestion from './routes/askQuestion';
 
 const router = Router();
 
-router.post("/api/changePcmToWav", (request) => changeToWav(request))
+router.post("/api/changeToWav", (request, ctx) => routeChangeToWav(request, ctx))
+router.post("/api/askQuestion", (request, ctx) => routeAskQuestion(request, ctx))
 
 router.get("/", () => Response.redirect("https://www.oscarcp.net", 303))
 

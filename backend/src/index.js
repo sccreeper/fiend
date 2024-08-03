@@ -12,7 +12,7 @@ import apiRouter from './router';
 
 // Export a default object containing event handlers
 export default {
-	// The fetch handler is invoked when this worker receives a HTTP(S) request
-	// and should return a Response (optionally wrapped in a Promise)
-	fetch: apiRouter.handle,
+	async fetch(request, env) {
+		return apiRouter.handle(request, {env: env})
+	}
 };
