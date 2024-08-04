@@ -1,5 +1,5 @@
-const sampleRate = 8000;
-const bitsPerSample = 16;
+const sampleRate = 4000;
+const bitsPerSample = 8;
 const channels = 1;
 
 // This file contains methods for converting a raw PCM data stream into a WAV file for processing by text to speech on Cloudflare.

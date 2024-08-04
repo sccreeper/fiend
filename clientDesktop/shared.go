@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 )
 
-const DefaultSampleRate int64 = 8000
+const DefaultSampleRate int64 = 4000
 const DefaultFramesPerBuffer int64 = 512
 const DefaultChannels int64 = 1
 
@@ -64,5 +65,21 @@ func getLlmResponse(query string) (FiendResponse, error) {
 	}
 
 	return responseJson, nil
+
+}
+
+func writeRaw(data []byte) error {
+
+	bytesReader := bytes.NewReader(data)
+
+	f, err := os.Create("raw.bin")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	io.Copy(f, bytesReader)
+
+	return nil
 
 }

@@ -41,7 +41,7 @@ func recordAudio() error {
 		},
 		SampleRate:      float64(DefaultSampleRate),
 		FramesPerBuffer: int(DefaultFramesPerBuffer),
-	}, func(in []int16) {
+	}, func(in []uint8) {
 		binary.Write(buffer, binary.LittleEndian, in)
 	})
 	if err != nil {
@@ -65,6 +65,8 @@ func stopRecordingAudio() error {
 
 	log.Println("Processing audio")
 
+	writeRaw(buffer.Bytes())
+
 	speechRecognitionResponse, err := doSpeechRecognition(buffer)
 	if err != nil {
 		return err
@@ -73,7 +75,7 @@ func stopRecordingAudio() error {
 	responseText.SetText(fmt.Sprintf("You: %s", speechRecognitionResponse))
 	speakButton.SetText(stringThinking)
 
-	log.Println("Getting LLM response for '%s'", speechRecognitionResponse)
+	log.Printf("Getting LLM response for '%s'\n", speechRecognitionResponse)
 
 	llmResponse, err := getLlmResponse(speechRecognitionResponse)
 	if err != nil {

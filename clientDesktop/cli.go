@@ -75,7 +75,7 @@ func startCli(ctx *cli.Context) error {
 		},
 		SampleRate:      float64(DefaultSampleRate),
 		FramesPerBuffer: int(DefaultFramesPerBuffer),
-	}, func(in []int16) {
+	}, func(in []uint8) {
 		binary.Write(buffer, binary.LittleEndian, in)
 	})
 
