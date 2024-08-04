@@ -15,6 +15,8 @@ import (
 
 func startCli(ctx *cli.Context) error {
 
+	portaudio.Initialize()
+
 	var deviceToBeUsed *portaudio.DeviceInfo
 
 	defaultInputDevice, err := portaudio.DefaultInputDevice()
@@ -104,17 +106,24 @@ func startCli(ctx *cli.Context) error {
 
 	fmt.Printf("Buffer size: %d\n", buffer.Len())
 
-	resp, err := getLlmResponse(buffer)
+	speechRecognitionResponse, err := doSpeechRecognition(buffer)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Send data to server
 
 	fmt.Printf("You\n---\n")
-	fmt.Println(resp.UserMessage)
+	fmt.Println(speechRecognitionResponse)
 	fmt.Printf("Fiend\n---\n")
-	fmt.Println(resp.LlmResponse)
+	fmt.Printf("Thinking...")
+
+	llmResponse, err := getLlmResponse(speechRecognitionResponse)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("\r%s", llmResponse.LlmResponse)
 
 	return nil
 }

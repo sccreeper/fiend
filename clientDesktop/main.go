@@ -27,9 +27,6 @@ func main() {
 		},
 	}
 
-	// Init Audio
-
-	portaudio.Initialize()
 	defer portaudio.Terminate()
 
 	// Start app

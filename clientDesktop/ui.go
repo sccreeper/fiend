@@ -27,6 +27,7 @@ var buffer *bytes.Buffer
 const stringStartSpeaking string = "Start speaking"
 const stringStopSpeaking string = "Stop speaking"
 const stringProcessing string = "Processing"
+const stringThinking string = "Thinking"
 
 func recordAudio() error {
 
@@ -64,7 +65,17 @@ func stopRecordingAudio() error {
 
 	log.Println("Processing audio")
 
-	resp, err := getLlmResponse(buffer)
+	speechRecognitionResponse, err := doSpeechRecognition(buffer)
+	if err != nil {
+		return err
+	}
+
+	responseText.SetText(fmt.Sprintf("You: %s", speechRecognitionResponse))
+	speakButton.SetText(stringThinking)
+
+	log.Println("Getting LLM response for '%s'", speechRecognitionResponse)
+
+	llmResponse, err := getLlmResponse(speechRecognitionResponse)
 	if err != nil {
 		return err
 	}
@@ -72,8 +83,8 @@ func stopRecordingAudio() error {
 	responseText.SetText(
 		fmt.Sprintf(
 			"You: %s\nFiend:\n%s",
-			resp.UserMessage,
-			resp.LlmResponse,
+			llmResponse.UserMessage,
+			llmResponse.LlmResponse,
 		),
 	)
 
@@ -82,6 +93,8 @@ func stopRecordingAudio() error {
 }
 
 func startUi(ctx *cli.Context) error {
+
+	portaudio.Initialize()
 
 	var err error
 

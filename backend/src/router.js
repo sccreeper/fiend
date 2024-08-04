@@ -1,11 +1,13 @@
 import { Router } from 'itty-router';
 import routeChangeToWav from './routes/changeToWav';
 import routeAskQuestion from './routes/askQuestion';
+import routeSpeechToText from './routes/speechRecognition';
 
 const router = Router();
 
 router.post("/api/changeToWav", (request, ctx) => routeChangeToWav(request, ctx))
 router.post("/api/askQuestion", (request, ctx) => routeAskQuestion(request, ctx))
+router.post("/api/speechToText", (request, ctx) => routeSpeechToText(request, ctx))
 
 router.get("/", () => Response.redirect("https://www.oscarcp.net", 303))
 
