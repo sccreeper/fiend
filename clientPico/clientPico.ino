@@ -24,19 +24,52 @@
 
 #define BUFFER_SIZE (AUDIO_SAMPLE_RATE*AUDIO_BITS*MAX_RECORDING_LENGTH)/8
 
+#define STRING_PROCESSING_AUDIO "Processing audio of length %d"
+#define SAMPLE_DELAY 125
+
+uint8_t audioData[BUFFER_SIZE];
+uint32_t bufferIndex = 0;
+
+bool recording = false;
+long startTime;
+PinStatus buttonState;
+
 // 0 uses default SPI frequency
 DisplaySSD1331_96x64x16_SPI display(OLED_RES, {-1, OLED_CS, OLED_DC, 0, OLED_SCL_SCK, OLED_SDA_MOSI});
 
 WiFiClass wifi;
 
+void handleAudio() {
+
+    recording = false;
+
+    digitalWrite(LED_PIN, LOW);
+
+    display.clear();
+    display.printFixed(0, 0, "Processing...");
+    Serial.printf(STRING_PROCESSING_AUDIO, bufferIndex);
+
+    // Cleanup
+
+    display.clear();
+    display.printFixed(0, 0, "Fiend");
+    bufferIndex = 0;
+    memset(&audioData, 0, BUFFER_SIZE);
+
+}
+
 void setup() {
+
+    display.begin();
+    display.setFixedFont(ssd1306xled_font6x8);
+    display.clear();
+    display.printFixed(0, 0, "Starting up...", STYLE_NORMAL);
 
     Serial.begin(9600);
 
     wifi.begin(WIFISSID, WIFIPASSWORD);
 
-    if (wifi.status() == WL_CONNECTED)
-    {
+    if (wifi.status() == WL_CONNECTED) {
         Serial.printf("Connected to WiFi %s\n", WIFISSID);
     } else {
         Serial.printf("Failed to connect to WiFi\n");
@@ -47,25 +80,52 @@ void setup() {
     pinMode(BUTTON_PIN, INPUT);
     pinMode(MIC_IN, INPUT);
 
-    digitalWrite(LED_PIN, HIGH);
-
     Serial.println("Starting display");
 
-    display.begin();
     display.setFixedFont(ssd1306xled_font6x8);
     display.clear();
-    display.printFixed(0, 0, "Fiend", STYLE_NORMAL);
+    display.printFixed(0, 0, "Fiend", STYLE_BOLD);
 
 }
 
 void loop() {
 
-    digitalWrite(LED_PIN, LOW);
-    delay(1000);
-    digitalWrite(LED_PIN, HIGH);
+    buttonState = digitalRead(BUTTON_PIN);
 
-    Serial.println("test");
+    if (recording) {
+    
+        if (buttonState == HIGH) {
 
-    delay(1000);
+            if (millis() - startTime >= (MAX_RECORDING_LENGTH*1000) || bufferIndex >= BUFFER_SIZE) {
 
+                handleAudio();
+            
+            } else {
+
+                int sample = analogRead(MIC_IN);
+                audioData[bufferIndex] = (uint8_t)(sample >> 2);
+
+                bufferIndex++;
+
+            }
+
+            delayMicroseconds(SAMPLE_DELAY);
+        
+        } else {
+            
+            handleAudio();
+        
+        }
+        
+
+    } else {
+
+        if (buttonState == HIGH) {
+            startTime = millis();
+            recording = true;
+            digitalWrite(LED_PIN, HIGH);
+        }
+        
+    }
+    
 }
