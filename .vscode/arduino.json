@@ -1,5 +1,7 @@
 {
     "board": "rp2040:rp2040:rpipicow",
     "sketch": "clientPico/clientPico.ino",
-    "configuration": "flash=2097152_0,freq=133,opt=Small,rtti=Disabled,stackprotect=Disabled,exceptions=Disabled,dbgport=Disabled,dbglvl=None,usbstack=picosdk,wificountry=worldwide,ipbtstack=ipv4only,uploadmethod=default"
+    "configuration": "flash=2097152_0,freq=133,opt=Small,rtti=Disabled,stackprotect=Disabled,exceptions=Disabled,dbgport=Disabled,dbglvl=None,usbstack=picosdk,wificountry=worldwide,ipbtstack=ipv4only,uploadmethod=default",
+    "output": "./build",
+    "port": "/dev/ttyACM0"
 }

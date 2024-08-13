@@ -17,9 +17,19 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "includePath": [
-                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.4/include",
-                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.4/cores/rp2040",
-                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.4/variants/rpipicow",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/include",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/cores/rp2040",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/variants/rpipicow",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/WiFi/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/lwIP_CYW43/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/lwIP_Ethernet/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/SPI/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/Updater/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/MD5Builder/src",
+                "/home/oscar/Arduino/libraries/lcdgfx/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/LittleFS/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/PicoOTA/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/Wire/src",
                 "/home/oscar/.arduino15/packages/rp2040/tools/pqt-gcc/2.2.0-d04e724/arm-none-eabi/include/c++/12.3.0",
                 "/home/oscar/.arduino15/packages/rp2040/tools/pqt-gcc/2.2.0-d04e724/arm-none-eabi/include/c++/12.3.0/arm-none-eabi/thumb",
                 "/home/oscar/.arduino15/packages/rp2040/tools/pqt-gcc/2.2.0-d04e724/arm-none-eabi/include/c++/12.3.0/backward",
@@ -28,7 +38,7 @@
                 "/home/oscar/.arduino15/packages/rp2040/tools/pqt-gcc/2.2.0-d04e724/arm-none-eabi/include"
             ],
             "forcedInclude": [
-                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.4/cores/rp2040/Arduino.h"
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/cores/rp2040/Arduino.h"
             ],
             "cStandard": "c11",
             "cppStandard": "c++17",
