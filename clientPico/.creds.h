@@ -1,3 +1,3 @@
 #define WIFISSID "SSID"
 #define WIFIPASSWORD "PASSWORD"
-#define SERVER_ADDR "yourserveraddr"
+#define FIEND_SERVER_ADDR "http://192.168.0.42:5000"

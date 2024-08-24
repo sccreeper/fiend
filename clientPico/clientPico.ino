@@ -1,9 +1,15 @@
 #include "WiFi.h"
+#include "ArduinoJson.h"
+#include "HTTPClient.h"
 #include "lcdgfx.h"
 
 #ifndef WIFISSID
 #include "creds.h"
 #endif
+
+const String serverAddr = FIEND_SERVER_ADDR;
+const String apiSpeechRec = serverAddr + "/api/speechToText";
+const String apiAskQuestion = serverAddr + "/api/askQuestion";
 
 #define LED_PIN 15
 #define BUTTON_PIN 14
@@ -39,44 +45,103 @@ DisplaySSD1331_96x64x16_SPI display(OLED_RES, {-1, OLED_CS, OLED_DC, 0, OLED_SCL
 
 WiFiClass wifi;
 
+enum HttpMethod {
+    POST,
+    GET
+};
+
+String httpPostRequest(String url, const uint8_t* body, size_t size, String contentType = "application/octet-stream", uint16_t timeout=10000) {
+
+    HTTPClient http;
+    http.begin(url);
+    http.setTimeout(timeout);
+    http.addHeader("Content-Type", contentType);
+    int httpCode = http.POST(body, size);
+
+    if (httpCode > 0) {
+        return http.getString();
+    } else {
+        Serial.printf("Request failed: %s\n", http.errorToString(httpCode).c_str());
+        return http.errorToString(httpCode);
+    }
+
+}
+
+#define FONT_WIDTH 6
+#define FONT_HEIGHT 8
+
+void printMultiLineString(const String& text, DisplaySSD1331_96x64x16_SPI& _display, uint16_t startRow) {
+
+    uint16_t rowIndex = startRow;
+    uint16_t columnIndex;
+
+    for (size_t i = 0; i < text.length() && (rowIndex*FONT_HEIGHT < _display.height()); i++) {
+
+        if (text.c_str()[i] == '\n') {
+            rowIndex++;
+            columnIndex = 0;
+        } else if (text.c_str()[i] == ' ' && columnIndex == 0) {
+            continue;
+        } else {
+
+            char characterString[] = {text.c_str()[i], '\0'};
+
+            if (columnIndex*FONT_WIDTH >= _display.width()) {
+                
+                rowIndex++;
+                columnIndex = 0;
+
+                _display.printFixed(0, rowIndex*FONT_HEIGHT, characterString);
+
+            } else {
+
+                _display.printFixed(columnIndex*FONT_WIDTH, rowIndex*FONT_HEIGHT, characterString);
+                columnIndex++;
+
+            }
+            
+        }
+        
+    }
+    
+}
+
 void handleAudio() {
 
     recording = false;
-
     digitalWrite(LED_PIN, LOW);
 
     display.clear();
     display.printFixed(0, 0, "Processing...");
-    //Serial.printf(STRING_PROCESSING_AUDIO, bufferIndex);
-    Serial.write(audioData, bufferIndex);
 
-    // Cleanup
+    String textResponse = httpPostRequest(apiSpeechRec, audioData, bufferIndex);
+    JsonDocument jsonDoc;
+    deserializeJson(jsonDoc, textResponse.c_str());
+
+    String userMessage = jsonDoc["text"].as<String>();
 
     display.clear();
-    display.printFixed(0, 0, "Fiend");
+    display.printFixed(0, 0, "You:");
+    printMultiLineString(userMessage, display, 1);
+    Serial.println(userMessage);
+
+    String llmForm = "question=" + userMessage + "&";
+    String llmResponse = httpPostRequest(apiAskQuestion, (const uint8_t*) llmForm.c_str(), llmForm.length(), "application/x-www-form-urlencoded");
+    jsonDoc.clear();
+    deserializeJson(jsonDoc, llmResponse.c_str());
+
+    String llmMessage = jsonDoc["llmResponse"].as<String>();
+    Serial.println(llmMessage);
+
+    display.printFixed(0, 16, "Fiend:");
+    printMultiLineString(llmMessage, display, 3);
+
+    // Cleanup
     bufferIndex = 0;
+    jsonDoc.clear();
     memset(audioData, 0, BUFFER_SIZE);
 
 }
-
-// unsigned long previousTimestamp;
-// unsigned long yPrev;
-// float Tf = 1000/AUDIO_SAMPLE_RATE;
-
-// float filter(float input) {
-
-//     unsigned long timestamp = micros();
-//     float dt = (timestamp - previousTimestamp)*1e-6f;
-//     if (dt < 0.0f || dt > 0.5f) dt = 1e-3f;
-
-//     float alpha = Tf/(Tf + dt);
-//     float y = alpha*yPrev + (1.0f - alpha)*input;
-
-//     yPrev = y;
-//     previousTimestamp = timestamp;
-//     return y;
-
-// }
 
 void setup() {
 

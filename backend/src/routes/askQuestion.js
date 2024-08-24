@@ -1,4 +1,6 @@
-const systemPrompt = `You are fiend, and are supposed to act as somebody's friend. You are a parody of another AI project called "friend". You should provide short responses, at most 2-3 sentences in length and under 500 characters.`
+const systemPrompt = `You are fiend, and are supposed to act as somebody's friend. You are a parody of another AI project called "friend". You should provide short responses, at most 2-3 sentences in length and under 500 characters. Do not use any emojis.`
+
+const validChars = ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\`abcdefghijklmnopqrstuvwxyz{|}~`
 
 /**
  * 
@@ -29,9 +31,20 @@ export default async function (request, ctx) {
         {messages}
     )
 
+    let sanitizedResponse = "";
+
+    for (let i = 0; i < llmResponse.response.length; i++) {
+        const char = llmResponse.response[i];
+
+        if (validChars.includes(char)) {
+            sanitizedResponse+=char;
+        }
+        
+    }
+
     return Response.json({
         userMessage: text,
-        llmResponse: llmResponse.response
+        llmResponse: sanitizedResponse
     });
  
 }

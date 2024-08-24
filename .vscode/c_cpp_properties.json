@@ -26,6 +26,8 @@
                 "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/SPI/src",
                 "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/Updater/src",
                 "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/MD5Builder/src",
+                "/home/oscar/Arduino/libraries/ArduinoJson/src",
+                "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/HTTPClient/src",
                 "/home/oscar/Arduino/libraries/lcdgfx/src",
                 "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/LittleFS/src",
                 "/home/oscar/.arduino15/packages/rp2040/hardware/rp2040/3.9.5/libraries/PicoOTA/src",
