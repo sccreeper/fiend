@@ -8,7 +8,7 @@
 #define LED_PIN 15
 #define BUTTON_PIN 14
 
-#define MIC_IN 26
+#define MIC_IN A1 //27
 
 #define OLED_SCL_SCK 18
 #define OLED_SDA_MOSI 19
@@ -25,7 +25,7 @@
 #define BUFFER_SIZE (AUDIO_SAMPLE_RATE*AUDIO_BITS*MAX_RECORDING_LENGTH)/8
 
 #define STRING_PROCESSING_AUDIO "Processing audio of length %d"
-#define SAMPLE_DELAY 125
+#define SAMPLE_DELAY 1000000/AUDIO_SAMPLE_RATE
 
 uint8_t audioData[BUFFER_SIZE];
 uint32_t bufferIndex = 0;
@@ -47,25 +47,47 @@ void handleAudio() {
 
     display.clear();
     display.printFixed(0, 0, "Processing...");
-    Serial.printf(STRING_PROCESSING_AUDIO, bufferIndex);
+    //Serial.printf(STRING_PROCESSING_AUDIO, bufferIndex);
+    Serial.write(audioData, bufferIndex);
 
     // Cleanup
 
     display.clear();
     display.printFixed(0, 0, "Fiend");
     bufferIndex = 0;
-    memset(&audioData, 0, BUFFER_SIZE);
+    memset(audioData, 0, BUFFER_SIZE);
 
 }
 
+// unsigned long previousTimestamp;
+// unsigned long yPrev;
+// float Tf = 1000/AUDIO_SAMPLE_RATE;
+
+// float filter(float input) {
+
+//     unsigned long timestamp = micros();
+//     float dt = (timestamp - previousTimestamp)*1e-6f;
+//     if (dt < 0.0f || dt > 0.5f) dt = 1e-3f;
+
+//     float alpha = Tf/(Tf + dt);
+//     float y = alpha*yPrev + (1.0f - alpha)*input;
+
+//     yPrev = y;
+//     previousTimestamp = timestamp;
+//     return y;
+
+// }
+
 void setup() {
+
+    analogReadResolution(12);
 
     display.begin();
     display.setFixedFont(ssd1306xled_font6x8);
     display.clear();
     display.printFixed(0, 0, "Starting up...", STYLE_NORMAL);
 
-    Serial.begin(9600);
+    Serial.begin();
 
     wifi.begin(WIFISSID, WIFIPASSWORD);
 
@@ -102,14 +124,11 @@ void loop() {
             
             } else {
 
-                int sample = analogRead(MIC_IN);
-                audioData[bufferIndex] = (uint8_t)(sample >> 2);
-
+                audioData[bufferIndex] = (uint8_t) map(analogRead(MIC_IN), 0, 4095, 0, 255);
                 bufferIndex++;
+                delayMicroseconds(SAMPLE_DELAY);
 
             }
-
-            delayMicroseconds(SAMPLE_DELAY);
         
         } else {
             

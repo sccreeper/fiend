@@ -1,1 +1,4 @@
 creds.h
+*.hex
+*.bin
+*.wav
