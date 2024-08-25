@@ -11,7 +11,6 @@ const String serverAddr = FIEND_SERVER_ADDR;
 const String apiSpeechRec = serverAddr + "/api/speechToText";
 const String apiAskQuestion = serverAddr + "/api/askQuestion";
 
-#define LED_PIN 15
 #define BUTTON_PIN 14
 
 #define MIC_IN A1 //27
@@ -40,15 +39,16 @@ bool recording = false;
 long startTime;
 PinStatus buttonState;
 
+enum LedState : uint32_t {
+    Off,
+    Flashing,
+    Static,
+};
+
 // 0 uses default SPI frequency
 DisplaySSD1331_96x64x16_SPI display(OLED_RES, {-1, OLED_CS, OLED_DC, 0, OLED_SCL_SCK, OLED_SDA_MOSI});
 
 WiFiClass wifi;
-
-enum HttpMethod {
-    POST,
-    GET
-};
 
 String httpPostRequest(String url, const uint8_t* body, size_t size, String contentType = "application/octet-stream", uint16_t timeout=10000) {
 
@@ -109,7 +109,7 @@ void printMultiLineString(const String& text, DisplaySSD1331_96x64x16_SPI& _disp
 void handleAudio() {
 
     recording = false;
-    digitalWrite(LED_PIN, LOW);
+    rp2040.fifo.push(Flashing);
 
     display.clear();
     display.printFixed(0, 0, "Processing...");
@@ -137,6 +137,7 @@ void handleAudio() {
     printMultiLineString(llmMessage, display, 3);
 
     // Cleanup
+    rp2040.fifo.push(Off);
     bufferIndex = 0;
     jsonDoc.clear();
     memset(audioData, 0, BUFFER_SIZE);
@@ -162,8 +163,6 @@ void setup() {
         Serial.printf("Failed to connect to WiFi\n");
     }
     
-
-    pinMode(LED_PIN, OUTPUT);
     pinMode(BUTTON_PIN, INPUT);
     pinMode(MIC_IN, INPUT);
 
@@ -189,7 +188,7 @@ void loop() {
             
             } else {
 
-                audioData[bufferIndex] = (uint8_t) map(analogRead(MIC_IN), 0, 4095, 0, 255);
+                audioData[bufferIndex] = static_cast<uint8_t>(map(analogRead(MIC_IN), 0, 4095, 0, 255));
                 bufferIndex++;
                 delayMicroseconds(SAMPLE_DELAY);
 
@@ -207,9 +206,76 @@ void loop() {
         if (buttonState == HIGH) {
             startTime = millis();
             recording = true;
-            digitalWrite(LED_PIN, HIGH);
+            rp2040.fifo.push(Static);
         }
         
     }
     
+}
+
+// Core 1 setup & code
+// Core 1 controls the LED
+
+#define LED_PIN 15
+
+LedState currentLedState = Off;
+LedState previousLedState = currentLedState;
+PinStatus ledPinState = LOW;
+
+#define FLASHING_DELAY 250
+long flashingDelta = 0;
+
+void setup1() {
+
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, LOW);
+
+}
+
+void loop1() {
+    
+    if (rp2040.fifo.available() >= 1) {
+    
+        currentLedState = static_cast<LedState>(rp2040.fifo.pop());
+
+    }
+    
+    switch (currentLedState) {
+    case Off:
+        if (currentLedState != previousLedState) {
+            previousLedState = currentLedState;
+            digitalWrite(LED_PIN, LOW);
+            ledPinState = LOW;
+        }
+        break;
+    case Static:
+        if (currentLedState != previousLedState) {
+            previousLedState = currentLedState;
+            digitalWrite(LED_PIN, HIGH);
+            ledPinState = HIGH;
+        }
+        break;
+    case Flashing:
+        if (currentLedState != previousLedState) {
+            previousLedState = currentLedState;
+        }
+        
+        if (millis()-flashingDelta > FLASHING_DELAY) {
+            
+            if (ledPinState) {
+                digitalWrite(LED_PIN, LOW);
+                ledPinState = LOW;
+            } else {
+                digitalWrite(LED_PIN, HIGH);
+                ledPinState = HIGH;
+            }
+
+            flashingDelta = millis();
+            
+        }
+        break;
+    default:
+        break;
+    }
+
 }
