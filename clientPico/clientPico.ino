@@ -50,25 +50,31 @@ DisplaySSD1331_96x64x16_SPI display(OLED_RES, {-1, OLED_CS, OLED_DC, 0, OLED_SCL
 
 WiFiClass wifi;
 
-String httpPostRequest(String url, const uint8_t* body, size_t size, String contentType = "application/octet-stream", uint16_t timeout=10000) {
+String httpPostRequest(HTTPClient& http, String url, const uint8_t* body, size_t size, String contentType = "application/octet-stream", uint16_t timeout=15000) {
 
-    HTTPClient http;
     http.begin(url);
     http.setTimeout(timeout);
     http.addHeader("Content-Type", contentType);
     int httpCode = http.POST(body, size);
 
     if (httpCode > 0) {
-        return http.getString();
+        String response = http.getString();
+        http.end();
+        return response;
     } else {
-        Serial.printf("Request failed: %s\n", http.errorToString(httpCode).c_str());
-        return http.errorToString(httpCode);
+        String errorString = http.errorToString(httpCode);
+
+        Serial.printf("Request failed: %s\n", errorString.c_str());
+        http.end();
+        return errorString;
     }
 
 }
 
-#define FONT_WIDTH 6
-#define FONT_HEIGHT 8
+#define FONT_WIDTH 5
+#define FONT_HEIGHT 7
+
+#define WRITE_CHAR(disp, ch, x, y) disp.setTextCursor(x, y); disp.printChar(ch);
 
 void printMultiLineString(const String& text, DisplaySSD1331_96x64x16_SPI& _display, uint16_t startRow) {
 
@@ -84,18 +90,16 @@ void printMultiLineString(const String& text, DisplaySSD1331_96x64x16_SPI& _disp
             continue;
         } else {
 
-            char characterString[] = {text.c_str()[i], '\0'};
-
-            if (columnIndex*FONT_WIDTH >= _display.width()) {
+            if (columnIndex*FONT_WIDTH > (_display.width()-FONT_WIDTH)) {
                 
                 rowIndex++;
                 columnIndex = 0;
 
-                _display.printFixed(0, rowIndex*FONT_HEIGHT, characterString);
+                WRITE_CHAR(_display, text.c_str()[i], 0, rowIndex*FONT_HEIGHT);
 
             } else {
 
-                _display.printFixed(columnIndex*FONT_WIDTH, rowIndex*FONT_HEIGHT, characterString);
+                WRITE_CHAR(_display, text.c_str()[i], columnIndex*FONT_WIDTH, rowIndex*FONT_HEIGHT);
                 columnIndex++;
 
             }
@@ -106,7 +110,26 @@ void printMultiLineString(const String& text, DisplaySSD1331_96x64x16_SPI& _disp
     
 }
 
+#define GREEN_BG_BLACK_FG(disp) disp.setBackground(RGB_COLOR16(0, 255, 0)); disp.setColor(RGB_COLOR16(0, 0, 0));
+#define WHITE_FG(disp) disp.setBackground(RGB_COLOR16(0, 0, 0)); disp.setColor(RGB_COLOR16(255, 255, 255));
+
+#define AUDIO_CLEANUP() \
+rp2040.fifo.push(Off); \
+bufferIndex = 0; \
+memset(audioData, 0, BUFFER_SIZE);
+
+#define HANDLE_TIMEOUT_ERROR(respString) \
+if(respString == http.errorToString(HTTPC_ERROR_READ_TIMEOUT)) { \
+    WHITE_FG(display) \
+    display.clear(); \
+    display.printFixed(0, 0, "Timeout try again."); \
+    AUDIO_CLEANUP() \
+    return; \
+}
+
 void handleAudio() {
+
+    HTTPClient http;
 
     recording = false;
     rp2040.fifo.push(Flashing);
@@ -114,33 +137,39 @@ void handleAudio() {
     display.clear();
     display.printFixed(0, 0, "Processing...");
 
-    String textResponse = httpPostRequest(apiSpeechRec, audioData, bufferIndex);
+    String httpResponse = httpPostRequest(http, apiSpeechRec, audioData, bufferIndex);
+    HANDLE_TIMEOUT_ERROR(httpResponse)
+    
     JsonDocument jsonDoc;
-    deserializeJson(jsonDoc, textResponse.c_str());
+    deserializeJson(jsonDoc, httpResponse.c_str());
 
     String userMessage = jsonDoc["text"].as<String>();
 
     display.clear();
-    display.printFixed(0, 0, "You:");
+    GREEN_BG_BLACK_FG(display)
+    display.printFixed(0, 0, "You:", STYLE_BOLD);
+    WHITE_FG(display)
     printMultiLineString(userMessage, display, 1);
     Serial.println(userMessage);
 
     String llmForm = "question=" + userMessage + "&";
-    String llmResponse = httpPostRequest(apiAskQuestion, (const uint8_t*) llmForm.c_str(), llmForm.length(), "application/x-www-form-urlencoded");
+    httpResponse = httpPostRequest(http, apiAskQuestion, (const uint8_t*) llmForm.c_str(), llmForm.length(), "application/x-www-form-urlencoded");
+    HANDLE_TIMEOUT_ERROR(httpResponse)
+
     jsonDoc.clear();
-    deserializeJson(jsonDoc, llmResponse.c_str());
+    deserializeJson(jsonDoc, httpResponse.c_str());
 
     String llmMessage = jsonDoc["llmResponse"].as<String>();
     Serial.println(llmMessage);
 
-    display.printFixed(0, 16, "Fiend:");
+    GREEN_BG_BLACK_FG(display)
+    display.printFixed(0, 14, "Fiend:", STYLE_BOLD);
+    WHITE_FG(display)
     printMultiLineString(llmMessage, display, 3);
 
     // Cleanup
-    rp2040.fifo.push(Off);
-    bufferIndex = 0;
+    AUDIO_CLEANUP()
     jsonDoc.clear();
-    memset(audioData, 0, BUFFER_SIZE);
 
 }
 
@@ -149,7 +178,7 @@ void setup() {
     analogReadResolution(12);
 
     display.begin();
-    display.setFixedFont(ssd1306xled_font6x8);
+    display.setFixedFont(ssd1306xled_font5x7);
     display.clear();
     display.printFixed(0, 0, "Starting up...", STYLE_NORMAL);
 
@@ -168,7 +197,6 @@ void setup() {
 
     Serial.println("Starting display");
 
-    display.setFixedFont(ssd1306xled_font6x8);
     display.clear();
     display.printFixed(0, 0, "Fiend", STYLE_BOLD);
 
