@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "picoWfootprint")(type "KiCad")(uri "${KIPRJMOD}/lib/ki-lime-pi-to-go/Module_RaspberryPi_Pico.pretty")(options "")(descr ""))
+)

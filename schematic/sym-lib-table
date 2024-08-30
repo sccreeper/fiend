@@ -1,0 +1,6 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "picoWsymbol")(type "KiCad")(uri "${KIPRJMOD}/lib/ki-lime-pi-to-go/MCU_Module_RaspberryPi_Pico.kicad_sym")(options "")(descr ""))
+  (lib (name "max4466")(type "KiCad")(uri "${KIPRJMOD}/lib/max4466/max4466.kicad_sym")(options "")(descr ""))
+  (lib (name "displaySsd1331_96x64x16_SPI")(type "KiCad")(uri "${KIPRJMOD}/lib/ssd1331/displaySsd1331_96x64x16_SPI.kicad_sym")(options "")(descr ""))
+)
