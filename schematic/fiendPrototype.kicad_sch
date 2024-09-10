@@ -4,6 +4,12 @@
 	(generator_version "8.0")
 	(uuid "13ce731d-2202-4c25-9794-602b4a717342")
 	(paper "A4")
+	(title_block
+		(title "Fiend Prototype")
+		(date "2024-08-30")
+		(company "Oscar Peace")
+		(comment 1 "Don't make one of these yourself.")
+	)
 	(lib_symbols
 		(symbol "Device:C"
 			(pin_numbers hide)
